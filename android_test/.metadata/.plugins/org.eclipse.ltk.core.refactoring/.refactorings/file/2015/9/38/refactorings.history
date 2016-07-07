@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Copy element &apos;constant.java&apos; to &apos;Clothes/src/com.gwj.clothes&apos;&#x0D;&#x0A;- Original project: &apos;file&apos;&#x0D;&#x0A;- Destination element: &apos;Clothes/src/com.gwj.clothes&apos;&#x0D;&#x0A;- Original element: &apos;gwj.constant.java&apos;" description="Copy compilation unit" destination="=Clothes/src&lt;com.gwj.clothes" element1="/src&lt;gwj{constant.java" files="0" flags="589830" folders="0" id="org.eclipse.jdt.ui.copy" policy="org.eclipse.jdt.ui.copyResources" stamp="1442200234429" units="1" version="1.0"/>
+</session>

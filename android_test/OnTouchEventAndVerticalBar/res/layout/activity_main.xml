@@ -1,0 +1,33 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="${relativePackage}.${activityClass}" 
+    android:fitsSystemWindows="true">
+
+    <com.example.ontouchevent.ChildView 
+        android:id="@+id/ChildView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/test"/>
+    <com.example.ontouchevent.VerticalProgressBar 
+        android:id="@+id/progressBar"
+        android:layout_width="10dp"
+        android:layout_height="match_parent"
+        android:max="100"
+        style="@android:style/Widget.ProgressBar.Horizontal"/>
+    <Button 
+        android:id="@+id/disappear"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="10dp"
+        android:text="dis"/>
+
+    <Button 
+        android:id="@+id/show"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="110dp"
+        android:text="show"/>
+   
+</RelativeLayout>

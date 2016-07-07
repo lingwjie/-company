@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring accessors="true" comment="Delete 3 elements from project &apos;Filejni&apos;&#x0D;&#x0A;- Original project: &apos;Filejni&apos;&#x0D;&#x0A;- Original elements:&#x0D;&#x0A;     jni.c&#x0D;&#x0A;     jniUtils.h&#x0D;&#x0A;     onload.c" description="Delete elements" element1="jni/onload.c" element2="jni/jni.c" element3="jni/jniUtils.h" elements="0" flags="589830" id="org.eclipse.jdt.ui.delete" resources="3" stamp="1440204827384" subPackages="false" version="1.0"/>
+</session>

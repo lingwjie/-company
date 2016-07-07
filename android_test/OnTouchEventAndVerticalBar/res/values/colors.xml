@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <color name="list_item_textcolor">#ff000000</color>
+    
+	<color name="color_white_text">#FFFFFF</color>
+    <color name="color_blue_text">#40CCFF</color>
+    <color name="color_black_text">#000000</color>
+    <color name="color_markbg">#ECF1F5</color>
+    <color name="color_lightblue">#FF2F97FF</color>
+    <color name="color_glass">#80000000</color>
+    <color name="color_line">#80607080</color>
+	<color name="color_red">#ffff0000</color>
+	
+	<color name="color_btn_ripple">#00ffffff</color>
+	<color name="color_btn_oval_background">#b3212121</color>
+	
+	<color name="color_title_bar">#f8f8f8</color>
+	
+	<color name="color_videonum_info">#00c4e9</color>
+	
+	<color name="color_video_name">#000000</color>
+	<color name="color_video_time">#364f67</color>
+	
+	<color name="color_seekbar_progress">#00c4ea</color>
+	<color name="color_seekbar_background">#a7afb1</color>
+	<color name="color_video_currenttime">#00c4e9</color>
+	<color name="color_video_totaltime">#ffffff</color>
+	
+	<color name="color_list_search_divider">#cacaca</color>
+	<color name="corner_search_background">#ffffff</color>
+	<color name="search_background">#cac9cf</color>
+	<color name="play_controller">#88ffffff</color>
+</resources>

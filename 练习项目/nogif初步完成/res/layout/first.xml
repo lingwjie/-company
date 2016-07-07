@@ -1,0 +1,124 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/first"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:splitMotionEvents="false"
+    android:orientation="vertical">
+     <ImageView 
+        android:id="@+id/waterleft"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="425dp"
+        android:background="@drawable/waterleft"/>
+    <ImageView 
+        android:id="@+id/scenone"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/sceneone"/>
+   <!-- 线谱 -->
+    <ImageView
+        android:id="@+id/xianpu"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@anim/xianpu" 
+        android:layout_marginLeft="100dp"
+        android:layout_marginTop="100dp"/>    
+    <!-- 龙舟 -->
+ <ImageView
+          android:id="@+id/lzh"
+          android:layout_width="125dp"
+          android:layout_height="125dp"
+          android:layout_alignParentLeft="true"
+          android:layout_alignParentTop="true"
+          android:layout_marginTop="365dp"
+          android:background="@drawable/shipg_hd" />
+<ImageView
+    android:id="@+id/lzd"
+   android:layout_width="125dp"
+          android:layout_height="125dp"
+    android:layout_alignTop="@+id/lzh"
+    android:layout_toRightOf="@+id/lzh"
+    android:background="@drawable/shipg_do" />
+<ImageView
+    android:id="@+id/lzr"
+    android:layout_width="125dp"
+          android:layout_height="125dp"
+    android:layout_alignTop="@+id/lzd"
+    android:layout_toRightOf="@+id/lzd"
+    android:background="@drawable/shipg_re" />
+<ImageView
+    android:id="@+id/lzm"
+    android:layout_width="125dp"
+          android:layout_height="125dp"
+    android:layout_alignTop="@+id/lzr"
+    android:layout_toRightOf="@+id/lzr"
+    android:background="@drawable/shipg_mi" />
+<ImageView
+    android:id="@+id/lzf"
+    android:layout_width="125dp"
+          android:layout_height="125dp"
+    android:layout_alignTop="@+id/lzm"
+    android:layout_toRightOf="@+id/lzm"
+    android:background="@drawable/shipg_fa" />
+<ImageView
+    android:id="@+id/lzso"
+    android:layout_width="125dp"
+          android:layout_height="125dp"
+    android:layout_alignTop="@+id/lzf"
+    android:layout_toRightOf="@+id/lzf"
+    android:background="@drawable/shipg_sol" />
+<ImageView
+    android:id="@+id/lzl"
+   android:layout_width="125dp"
+          android:layout_height="125dp"
+    android:layout_alignTop="@+id/lzso"
+    android:layout_toRightOf="@+id/lzso"
+    android:background="@drawable/shipg_la" />
+<ImageView
+    android:id="@+id/lzsi"
+   android:layout_width="125dp"
+          android:layout_height="125dp"
+    android:layout_alignTop="@+id/lzl"
+    android:layout_toRightOf="@+id/lzl"
+    android:background="@drawable/shipg_si" />
+ <com.example.nogif.water
+        android:id="@+id/waterleft2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="0dp"
+        android:layout_marginTop="388dp"
+    
+    />
+<!-- 分数  ，退出按钮 -->
+<ImageButton
+           android:id="@+id/quit"
+           android:layout_width="wrap_content"
+           android:layout_height="wrap_content"
+           android:layout_alignParentRight="true"
+           android:layout_alignTop="@+id/score"
+           android:background="@drawable/quit_b"
+            android:src="@anim/quit_a" />
+
+
+<Button
+    android:id="@+id/score"
+    style="?android:attr/buttonStyleSmall"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginRight="16dp"
+        android:layout_marginTop="14dp"
+        android:background="@drawable/point" />
+<ImageView 
+    android:id="@+id/scorestar"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:background="@anim/scorestar" 
+    android:layout_marginLeft="10dp"
+    android:layout_marginTop="20dp"
+    />
+
+
+
+
+</RelativeLayout>

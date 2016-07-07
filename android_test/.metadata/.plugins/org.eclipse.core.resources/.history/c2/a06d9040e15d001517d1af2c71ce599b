@@ -1,0 +1,114 @@
+package com.gwj.clothes;
+
+import android.R.color;
+import android.app.Activity;
+import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.view.Window;
+import android.view.WindowManager;
+import android.widget.*;
+import android.view.animation.*;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.*;
+import android.os.*;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.RandomAccessFile;
+import java.util.*;
+import android.view.View.*;
+
+public class MainActivity extends Activity implements OnClickListener{
+	int snailspeed = 2;
+	snail snail ;
+	Button exit;
+	static boolean direction = true; //true右 false左
+	ImageView[] imageViews = new ImageView [6];
+	ImageView[] words = new ImageView [6];
+	int[] imageId = {R.id.view1 , R.id.view2 , R.id.view3 , 
+			R.id.view4 , R.id.view5 , R.id.view6};
+	int[] wordId = {R.id.word1 , R.id.word2 , R.id.word3 , 
+			R.id.word4 , R.id.word5 , R.id.word6};
+	Bitmap[] imagepic = new Bitmap[6] ;
+	Bitmap[] wordpic = new Bitmap[6] ;
+	analysisrealize analysisrealize = new analysisrealize();
+    @Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		// 去掉窗口标题
+		requestWindowFeature(Window.FEATURE_NO_TITLE);
+		// 全屏显示
+		getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
+				WindowManager.LayoutParams.FLAG_FULLSCREEN);
+		setContentView(R.layout.activity_main);
+		TableLayout imagetable = (TableLayout)findViewById(R.id.imagetable);
+		snail = (snail)findViewById(R.id.snail);
+		exit = (Button)findViewById(R.id.quit);
+		exit.setOnClickListener(this);
+		snail.setOnClickListener(this);
+		
+		analysisrealize.getimage("mnt//sdcard//mfh.pin");
+		//pic = BitmapFactory.decodeByteArray(constant.image[6][0][0], 0, constant.image[6][0][0].length);
+		for (int i = 0; i < imageViews.length; i++) {
+			imageViews[i] = (ImageView) findViewById(imageId[i]);
+			words[i] = (ImageView) findViewById(wordId[i]);
+			imagepic[i] = BitmapFactory.decodeByteArray(constant.image[6][i][0], 0,
+					constant.image[6][i][0].length);
+			wordpic[i] = BitmapFactory.decodeByteArray(constant.image[6][i][1], 0,
+					constant.image[6][i][1].length);
+			imageViews[i].setImageBitmap(imagepic[i]);
+			words[i].setImageBitmap(wordpic[i]);
+		}
+		
+		//蜗牛向前运动
+		final Handler snailHandler = new Handler(){
+			@Override
+			public void handleMessage(Message msg) {
+				super.handleMessage(msg);
+				if (msg.what == 0x11) {
+					if (direction && snail.flag) {
+						if (snail.getX() >= 200) {
+							direction = false;
+						}
+						snail.setX(snail.getX()+snailspeed);
+					}
+					else if(snail.flag){
+						if (snail.getX() <= 0) {
+							direction = true;
+						}
+						snail.setX(snail.getX()-snailspeed);
+					}					
+				}
+			}
+		};
+		new Timer().schedule(new TimerTask(){
+
+			@Override
+			public void run() {
+				snailHandler.sendEmptyMessage(0x11);
+			}}
+		,0, 150);
+	}
+	@Override
+	public void onClick(View view) {
+		switch (view.getId()) {
+		case R.id.snail:
+			snail.flag = false;
+			snail.maxindex = 24;
+			break;
+		case R.id.quit:
+			finish();
+			break;
+		case R.id.word1:
+		case R.id.word2:
+		case R.id.word3:
+		case R.id.word4:
+		case R.id.word5:
+		case R.id.word6:
+		}
+	}
+}

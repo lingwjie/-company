@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#f0f0f0f0"
+    android:orientation="vertical" >
+    <Button 
+        android:id="@+id/mediaPlayer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/mediaPlayer"/>
+
+    <Button 
+        android:id="@+id/Assets"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/Assets"/>
+    <Button
+        android:id="@+id/external_store" 
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/external_store"/>
+    <Button 
+        android:id="@+id/network"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/network"/>
+</LinearLayout>

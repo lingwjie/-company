@@ -1,0 +1,912 @@
+package com.dream.soundrecorder.recordlist;
+
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import com.dream.soundrecorder.R;
+import com.dream.soundrecorder.recordlist.MyMediaPlayer.MyMediaPlayerListener;
+
+import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.ContentResolver;
+import android.content.ContentUris;
+import android.content.ContentValues;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.database.Cursor;
+import android.graphics.Color;
+import android.media.MediaPlayer;
+import android.media.RingtoneManager;
+import android.net.Uri;
+import android.os.Bundle;
+import android.os.Handler;
+import android.provider.MediaStore;
+import android.provider.MediaStore.MediaColumns;
+import android.util.Log;
+import android.view.Gravity;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.WindowManager;
+import android.view.View.OnClickListener;
+import android.view.ViewGroup.LayoutParams;
+import android.view.ViewGroup;
+import android.view.Window;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
+import android.widget.AdapterView.OnItemSelectedListener;
+import android.widget.BaseAdapter;
+import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.ListView;
+import android.widget.RelativeLayout;
+import android.widget.SeekBar;
+import android.widget.TextView;
+import android.widget.Toast;
+import android.widget.SeekBar.OnSeekBarChangeListener;
+
+public class RecordListActivity extends Activity implements
+		MyMediaPlayerListener {
+
+	private String TAG = "RecordListActivity";
+
+	private Context mContext;
+
+	private String[] mCols = new String[] { MediaStore.Audio.Playlists._ID,
+			MediaStore.Audio.Playlists.NAME };
+
+	public static final String RECORD_PLAYLIST_NAME = "My recordings";
+	// private String RECORD_PLAYLIST_NAME = "我的录音";
+
+	private ImageView imageView_back;
+
+	private LinearLayout bbk_contant;
+
+	private TextView no_video_text;
+
+	private ListView list_parent;
+
+	private LinearLayout seekbar_layout;
+
+	private TextView playetime;
+
+	private TextView totalduration;
+
+	private SeekBar seekbar;
+
+	private Button send;
+
+	private Button delete;
+
+	private ListAdapter listAdapter;
+
+	private ArrayList<Mp3> songs = new ArrayList<Mp3>();
+
+	/**
+	 * 所有的播放列表
+	 */
+	private ArrayList<PlayListInfo> playListInfoList = new ArrayList<PlayListInfo>();
+
+	/**
+	 * 列表中的每一项条目对象的列表
+	 */
+	List<ListItemBean> listDatas = new ArrayList<ListItemBean>();
+
+	/**
+	 * 列表id
+	 */
+	private long playlistId;
+
+	private MyMediaPlayer myMediaPlayer;
+
+	private int curPosition = -1;
+
+	/**
+	 * 点击“设为”按钮后弹出的对话框
+	 */
+	private AlertDialog dialog;
+
+	Handler handler = new Handler();
+	Runnable updateThread = new Runnable() {
+		public void run() {
+			if (myMediaPlayer != null && myMediaPlayer.isPlay()) {
+				// 获得歌曲的长度并设置成播放进度条的最大值
+				seekbar.setMax(myMediaPlayer.getDuration());
+				// 获得歌曲现在播放位置并设置成播放进度条的值
+				seekbar.setProgress(myMediaPlayer.getCurrent());
+
+				playetime.setText(formatTime(myMediaPlayer.getCurrent()));
+				totalduration.setText(formatTime(myMediaPlayer.getDuration()));
+			}
+
+			// 每次延迟100毫秒再启动线程
+			handler.postDelayed(updateThread, 300);
+		}
+	};
+
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		// TODO Auto-generated method stub
+		super.onCreate(savedInstanceState);
+
+		mContext = this;
+		setContentView(R.layout.recordlist_layout);
+
+		// setTranslucentStatusAndActionBar(this);
+
+		myMediaPlayer = new MyMediaPlayer(mContext);
+		myMediaPlayer.setMyMediaPlayerListener(this);
+
+		boolean isHaveData = initInfo();
+
+		initViews();
+
+		initListeners();
+
+		if (!isHaveData) {
+			bbk_contant.setVisibility(View.VISIBLE);
+		} else {
+			handler.post(updateThread);
+		}
+	}
+
+	@Override
+	protected void onDestroy() {
+		// TODO Auto-generated method stub
+		super.onDestroy();
+
+		if (myMediaPlayer != null) {
+			myMediaPlayer.release();
+			myMediaPlayer = null;
+		}
+	}
+
+	@Override
+	public void mediaOnCompletion() {
+		// TODO Auto-generated method stub
+		for (int i = 0; i < listDatas.size(); i++) {
+			ListItemBean listItemBean = listDatas.get(i);
+			listItemBean.setIsPlay(false);
+
+			listDatas.set(i, listItemBean);
+		}
+
+		listAdapter.notifyDataSetChanged();
+
+		seekbar.setProgress(0);
+		playetime.setText(formatTime(0));
+	}
+
+	/**
+	 * 设置状态栏透明
+	 * 
+	 * @param activity
+	 */
+	private void setTranslucentStatusAndActionBar(Activity activity) {
+		if (android.os.Build.VERSION.SDK_INT > 18) {
+			Window window = activity.getWindow();
+			window.setFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS,
+					WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
+			window.setFlags(
+					WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION,
+					WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION);
+
+			// 设置根布局的内边距
+			LinearLayout linearLayout = (LinearLayout) activity
+					.findViewById(R.id.listview_parent);
+			linearLayout.setPadding(
+					0,
+					Utils.getActionBarHeight(activity.getApplicationContext())
+							+ Utils.getStatusBarHeight(activity
+									.getApplicationContext()), 0, 0);
+
+			// 创建TextView
+			TextView textView = new TextView(activity.getApplicationContext());
+			LinearLayout.LayoutParams lParams = new LinearLayout.LayoutParams(
+					LayoutParams.MATCH_PARENT,
+					Utils.getStatusBarHeight(activity.getApplicationContext()));
+			// textView.setBackgroundResource(R.color.window_background_color);
+			textView.setBackgroundColor(Color.parseColor("#1A1F32"));
+			textView.setLayoutParams(lParams);
+			// 获得根视图并把TextView加进去。
+			ViewGroup view = (ViewGroup) activity.getWindow().getDecorView();
+			view.addView(textView);
+		}
+	}
+
+	private boolean initInfo() {
+		getPlaylistList(mContext);
+
+		int size = playListInfoList.size();
+		Log.e(TAG, "initInfo -- size = " + size);
+		if (size > 0) {
+			for (int i = 0; i < size; i++) {
+				Log.e(TAG, "initInfo -- i = " + i + ", playlist_name = "
+						+ playListInfoList.get(i).getPlayListName());
+				if (playListInfoList.get(i).getPlayListName()
+						.equals(RECORD_PLAYLIST_NAME)) {
+					playlistId = Integer.parseInt(playListInfoList.get(i)
+							.getPlayListId());
+
+					songs = getSongListForPlaylist(mContext, playlistId);
+
+					int songsLength = songs.size();
+					Log.e(TAG, "initInfo -- songsLength = " + songsLength);
+					if (songsLength > 0) {
+						for (int j = 0; j < songsLength; j++) {
+							// 初始化列表条目数据
+							listDatas.add(new ListItemBean(songs.get(j), false,
+									false));
+						}
+
+						return true;
+					}
+				}
+			}
+		}
+
+		return false;
+	}
+
+	private void initViews() {
+		imageView_back = (ImageView) findViewById(R.id.imageView_back);
+		bbk_contant = (LinearLayout) findViewById(R.id.bbk_contant);
+		no_video_text = (TextView) findViewById(R.id.no_video_text);
+		list_parent = (ListView) findViewById(R.id.list_parent);
+		seekbar_layout = (LinearLayout) findViewById(R.id.seekbar_layout);
+		playetime = (TextView) findViewById(R.id.playetime);
+		totalduration = (TextView) findViewById(R.id.totalduration);
+		seekbar = (SeekBar) findViewById(R.id.seekbar);
+		send = (Button) findViewById(R.id.send);
+		delete = (Button) findViewById(R.id.delete);
+	}
+
+	private void initListeners() {
+		imageView_back.setOnClickListener(new ClickListener());
+		send.setOnClickListener(new ClickListener());
+		delete.setOnClickListener(new ClickListener());
+		seekbar.setOnSeekBarChangeListener(new SeekBarChangeEvent());
+
+		listAdapter = new ListAdapter(mContext);
+		list_parent.setAdapter(listAdapter);
+		list_parent.setOnItemClickListener(new OnItemClickListener() {
+
+			@Override
+			public void onItemClick(AdapterView<?> parent, View view,
+					int position, long id) {
+				// TODO Auto-generated method stub
+				Log.e(TAG, "onItemClick --- position = " + position);
+
+				try {
+					if (curPosition != position) {
+						String url = listDatas.get(position).getMp3().getUrl();
+						myMediaPlayer.playMusic(url);
+					} else {
+						myMediaPlayer.pausePlay();
+					}
+				} catch (Exception e) {
+					Log.e(TAG, "onItemClick --- error e = " + e.getMessage());
+					Toast.makeText(mContext, "录音文件播放错误", Toast.LENGTH_LONG)
+							.show();
+				}
+
+				for (int i = 0; i < listDatas.size(); i++) {
+					ListItemBean listItemBean = listDatas.get(i);
+					if (i != position) {
+						if (listItemBean.getIsSelect()) {
+							listItemBean.setIsSelect(false);
+						}
+
+						if (listItemBean.getIsPlay()) {
+							listItemBean.setIsPlay(false);
+						}
+					} else {
+						listItemBean.setIsSelect(true);
+
+						if (myMediaPlayer.isPlay()) {
+							listItemBean.setIsPlay(true);
+						} else {
+							listItemBean.setIsPlay(false);
+						}
+
+						curPosition = i;
+					}
+
+					listDatas.set(i, listItemBean);
+				}
+
+				listAdapter.notifyDataSetChanged();
+
+				if (seekbar_layout.getVisibility() == View.GONE) {
+					seekbar_layout.setVisibility(View.VISIBLE);
+				}
+			}
+		});
+	}
+
+	/**
+	 * 得到所有歌曲列表的列表名字
+	 */
+	private void getPlaylistList(Context context) {
+		playListInfoList.clear();
+
+		android.content.ContentResolver cr = context.getContentResolver();
+		android.database.Cursor cursor = cr.query(
+				MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI, mCols, null,
+				null, MediaStore.Audio.Playlists._ID + " desc");
+
+		int len = cursor.getCount();
+		int id = cursor.getColumnIndexOrThrow(MediaStore.Audio.Playlists._ID);
+		int name = cursor
+				.getColumnIndexOrThrow(MediaStore.Audio.Playlists.NAME);
+
+		for (int i = 0; i < len; i++) {
+			cursor.moveToNext();
+			long id_temp = cursor.getLong(id);
+			String temp = cursor.getString(name);
+			PlayListInfo playListInfo = new PlayListInfo(id_temp + "", temp);
+			playListInfoList.add(playListInfo);
+		}
+
+		cursor.close();
+	}
+
+	/**
+	 * 得到歌曲列表中的全部歌曲，plid为列表id
+	 */
+	private ArrayList<Mp3> getSongListForPlaylist(Context context, long plid) {
+		final String[] ccols = new String[] {
+				MediaStore.Audio.Playlists.Members._ID,
+				MediaStore.Audio.Playlists.Members.TITLE,
+				MediaStore.Audio.Playlists.Members.ARTIST,
+				MediaStore.Audio.Playlists.Members.AUDIO_ID,
+				MediaStore.Audio.Playlists.Members.DURATION,
+				MediaStore.Audio.Playlists.Members.DATE_ADDED,
+				MediaColumns.DATA };
+
+		Cursor cursor = query(context,
+				MediaStore.Audio.Playlists.Members.getContentUri("external",
+						plid), ccols, null, null,
+				MediaStore.Audio.Playlists.Members.DEFAULT_SORT_ORDER);
+
+		if (cursor != null) {
+			ArrayList<Mp3> list = getSongListForCursor(context, cursor);
+			cursor.close();
+			return list;
+		}
+		return null;
+	}
+
+	private Cursor query(Context context, Uri uri, String[] projection,
+			String selection, String[] selectionArgs, String sortOrder) {
+		return query(context, uri, projection, selection, selectionArgs,
+				sortOrder, 0);
+	}
+
+	private Cursor query(Context context, Uri uri, String[] projection,
+			String selection, String[] selectionArgs, String sortOrder,
+			int limit) {
+		try {
+			ContentResolver resolver = context.getContentResolver();
+			if (resolver == null) {
+				return null;
+			}
+			if (limit > 0) {
+				uri = uri.buildUpon().appendQueryParameter("limit", "" + limit)
+						.build();
+			}
+			return resolver.query(uri, projection, selection, selectionArgs,
+					sortOrder);
+		} catch (UnsupportedOperationException ex) {
+			return null;
+		}
+	}
+
+	private ArrayList<Mp3> getSongListForCursor(Context context, Cursor cursor) {
+		if (cursor == null) {
+			return null;
+		}
+		int len = cursor.getCount();
+		long[] list = new long[len];
+		cursor.moveToFirst();
+		int id = -1, title = -1, artist = -1, duration = -1, date = -1;
+		int allSongIndex = -1;
+		int url = -1;
+		try {
+			allSongIndex = cursor
+					.getColumnIndexOrThrow(MediaStore.Audio.Playlists.Members.AUDIO_ID);
+			id = cursor
+					.getColumnIndexOrThrow(MediaStore.Audio.Playlists.Members._ID);
+			title = cursor
+					.getColumnIndexOrThrow(MediaStore.Audio.Playlists.Members.TITLE);
+			artist = cursor
+					.getColumnIndexOrThrow(MediaStore.Audio.Playlists.Members.ARTIST);
+			duration = cursor
+					.getColumnIndexOrThrow(MediaStore.Audio.Playlists.Members.DURATION);
+			date = cursor
+					.getColumnIndexOrThrow(MediaStore.Audio.Playlists.Members.DATE_ADDED);
+			url = cursor.getColumnIndexOrThrow(MediaColumns.DATA);
+		} catch (IllegalArgumentException ex) {
+			id = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media._ID);
+		}
+		ArrayList<Mp3> songs = new ArrayList<Mp3>();
+		songs.clear();
+		for (int i = 0; i < len; i++) {
+			long song_id = cursor.getLong(id);
+			long allSongId = cursor.getLong(allSongIndex);
+			String song_url = cursor.getString(url);
+			String tilte = cursor.getString(title);
+			String song_artist = cursor.getString(artist);
+			int song_duration = cursor.getInt(duration);
+			long date_added = cursor.getLong(date);
+
+			Mp3 song = new Mp3();
+			song.setSqlId(Integer.parseInt(song_id + ""));
+			song.setName(tilte);
+			song.setSingerName(song_artist);
+			song.setAllSongIndex(allSongId);
+			song.setUrl(song_url);
+			song.setDuration(song_duration);
+
+			Date d = new Date(date_added * 1000);
+			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+			song.setDateAdded(sdf.format(d));
+
+			songs.add(song);
+
+			cursor.moveToNext();
+		}
+		return songs;
+	}
+
+	/**
+	 * 将某一首歌添加到某个歌曲列表中，ids是歌曲id，playlistid是列表id
+	 */
+	private void addToPlaylist(Context context, long[] ids, long playlistid) {
+		if (ids == null) {
+			Log.e("MusicBase", "ListSelection null");
+		} else {
+			int size = ids.length;
+			ContentResolver resolver = context.getContentResolver();
+			String[] cols = new String[] { "count(*)" };
+			Uri uri = MediaStore.Audio.Playlists.Members.getContentUri(
+					"external", playlistid);
+			Cursor cur = resolver.query(uri, cols, null, null, null);
+			cur.moveToFirst();
+			int base = cur.getInt(0);
+			cur.close();
+			int numinserted = 0;
+			for (int i = 0; i < size; i += 1000) {
+				makeInsertItems(ids, i, 1000, base);
+				numinserted += resolver.bulkInsert(uri, sContentValuesCache);
+			}
+		}
+	}
+
+	private ContentValues[] sContentValuesCache = null;
+
+	private void makeInsertItems(long[] ids, int offset, int len, int base) {
+		if (offset + len > ids.length) {
+			len = ids.length - offset;
+		}
+		if (sContentValuesCache == null || sContentValuesCache.length != len) {
+			sContentValuesCache = new ContentValues[len];
+		}
+		for (int i = 0; i < len; i++) {
+			if (sContentValuesCache[i] == null) {
+				sContentValuesCache[i] = new ContentValues();
+			}
+			sContentValuesCache[i].put(
+					MediaStore.Audio.Playlists.Members.PLAY_ORDER, base
+							+ offset + i);
+			sContentValuesCache[i].put(
+					MediaStore.Audio.Playlists.Members.AUDIO_ID,
+					ids[offset + i]);
+		}
+	}
+
+	/**
+	 * 格式化时间，将其变成00:00的形式
+	 */
+	private String formatTime(int time) {
+		int secondSum = time / 1000;
+		int minute = secondSum / 60;
+		int second = secondSum % 60;
+
+		String result = "";
+		if (minute < 10)
+			result = "0";
+		result = result + minute + ":";
+		if (second < 10)
+			result = result + "0";
+		result = result + second;
+
+		return result;
+	}
+
+	/**
+	 * 设置铃声
+	 * 
+	 * @param path
+	 * @param id
+	 */
+	private void setVoice(String path, int id) {
+		ContentValues cv = new ContentValues();
+		Uri newUri = null;
+		Uri uri = MediaStore.Audio.Media.getContentUriForPath(path);
+
+		// 查询音乐文件在媒体库是否存在
+		Cursor cursor = this.getContentResolver().query(uri, null,
+				MediaStore.MediaColumns.DATA + "=?", new String[] { path },
+				null);
+		if (cursor != null) {
+			if (cursor.moveToFirst() && cursor.getCount() > 0) {
+				String _id = cursor.getString(0);
+				switch (id) {
+				case RingType.RINGTONE:
+					cv.put(MediaStore.Audio.Media.IS_RINGTONE, true);
+					cv.put(MediaStore.Audio.Media.IS_NOTIFICATION, false);
+					cv.put(MediaStore.Audio.Media.IS_ALARM, false);
+					cv.put(MediaStore.Audio.Media.IS_MUSIC, false);
+					break;
+				case RingType.NOTIFICATION:
+					cv.put(MediaStore.Audio.Media.IS_RINGTONE, false);
+					cv.put(MediaStore.Audio.Media.IS_NOTIFICATION, true);
+					cv.put(MediaStore.Audio.Media.IS_ALARM, false);
+					cv.put(MediaStore.Audio.Media.IS_MUSIC, false);
+					break;
+				case RingType.ALARM:
+					cv.put(MediaStore.Audio.Media.IS_RINGTONE, false);
+					cv.put(MediaStore.Audio.Media.IS_NOTIFICATION, false);
+					cv.put(MediaStore.Audio.Media.IS_ALARM, true);
+					cv.put(MediaStore.Audio.Media.IS_MUSIC, false);
+					break;
+				case RingType.ALL:
+					cv.put(MediaStore.Audio.Media.IS_RINGTONE, true);
+					cv.put(MediaStore.Audio.Media.IS_NOTIFICATION, true);
+					cv.put(MediaStore.Audio.Media.IS_ALARM, true);
+					cv.put(MediaStore.Audio.Media.IS_MUSIC, false);
+					break;
+				default:
+					break;
+				}
+
+				// 把需要设为铃声的歌曲更新铃声库
+				getContentResolver().update(uri, cv,
+						MediaStore.MediaColumns.DATA + "=?",
+						new String[] { path });
+				newUri = ContentUris.withAppendedId(uri, Long.valueOf(_id));
+				// 一下为关键代码：
+				switch (id) {
+				case RingType.RINGTONE:
+					RingtoneManager.setActualDefaultRingtoneUri(this,
+							RingtoneManager.TYPE_RINGTONE, newUri);
+					break;
+				case RingType.NOTIFICATION:
+					RingtoneManager.setActualDefaultRingtoneUri(this,
+							RingtoneManager.TYPE_NOTIFICATION, newUri);
+					break;
+				case RingType.ALARM:
+					RingtoneManager.setActualDefaultRingtoneUri(this,
+							RingtoneManager.TYPE_ALARM, newUri);
+					break;
+				case RingType.ALL:
+					RingtoneManager.setActualDefaultRingtoneUri(this,
+							RingtoneManager.TYPE_ALL, newUri);
+					break;
+				default:
+					break;
+				}
+
+				// 播放铃声
+				// Ringtone rt = RingtoneManager.getRingtone(this, newUri);
+				// rt.play();
+
+				Toast.makeText(mContext, "设置成功", Toast.LENGTH_LONG).show();
+			}
+			cursor.close();
+		}
+	}
+
+	/**
+	 * 点击重复播放textview后弹出的对话框
+	 */
+	private void showRepeatPlayDialog() {
+		if (dialog == null) {
+			dialog = new AlertDialog.Builder(mContext).create();
+			Window localWindow = dialog.getWindow();
+			// WindowManager.LayoutParams localLayoutParams =
+			// localWindow.getAttributes();
+			localWindow.setGravity(Gravity.CENTER);
+			// localWindow.setAttributes(localLayoutParams);
+			// localWindow.setWindowAnimations(R.style.PopupAnimation);
+
+			dialog.show();
+			dialog.setContentView(R.layout.alertdialog_send_layout);
+		} else {
+			dialog.show();
+		}
+
+		dialog.findViewById(R.id.tableRow1).setOnClickListener(
+				new SendDialogListener());
+		dialog.findViewById(R.id.tableRow2).setOnClickListener(
+				new SendDialogListener());
+		dialog.findViewById(R.id.tableRow3).setOnClickListener(
+				new SendDialogListener());
+		dialog.findViewById(R.id.tableRow4).setOnClickListener(
+				new SendDialogListener());
+	}
+
+	private class SendDialogListener implements View.OnClickListener {
+
+		@Override
+		public void onClick(View v) {
+			// TODO Auto-generated method stub
+			switch (v.getId()) {
+			case R.id.tableRow1:
+				break;
+			case R.id.tableRow2:
+				setVoice(listDatas.get(curPosition).getMp3().getUrl(),
+						RingType.RINGTONE);
+
+				dialog.dismiss();
+				break;
+			case R.id.tableRow3:
+				setVoice(listDatas.get(curPosition).getMp3().getUrl(),
+						RingType.NOTIFICATION);
+
+				dialog.dismiss();
+				break;
+			case R.id.tableRow4:
+				setVoice(listDatas.get(curPosition).getMp3().getUrl(),
+						RingType.ALARM);
+
+				dialog.dismiss();
+				break;
+
+			}
+		}
+
+	}
+
+	class ListAdapter extends BaseAdapter {
+
+		private Context context;
+
+		public ListAdapter(Context context) {
+			this.context = context;
+		}
+
+		@Override
+		public int getCount() {
+			// TODO Auto-generated method stub
+			return listDatas.size();
+		}
+
+		@Override
+		public Object getItem(int position) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public long getItemId(int position) {
+			// TODO Auto-generated method stub
+			return 0;
+		}
+
+		@Override
+		public View getView(int position, View convertView, ViewGroup parent) {
+			// TODO Auto-generated method stub
+			final int pos = position;
+			final Holder holder;
+			if (convertView == null) {
+				convertView = LayoutInflater.from(context).inflate(
+						R.layout.recorder_list_item, null);
+				holder = new Holder(convertView);
+
+				convertView.setTag(holder);
+			} else {
+				holder = (Holder) convertView.getTag();
+			}
+
+			if (pos == 0) {
+				holder.view_top_line.setVisibility(View.VISIBLE);
+			} else {
+				holder.view_top_line.setVisibility(View.INVISIBLE);
+			}
+
+			if (listDatas.get(pos).getIsSelect()) {
+				holder.itemlayout.setBackgroundColor(Color
+						.parseColor("#1A1F32"));
+			} else {
+				holder.itemlayout.setBackgroundColor(Color
+						.parseColor("#0F121D"));
+				holder.itemlayout
+						.setBackgroundResource(R.drawable.recordlist_selector);
+			}
+
+			if (listDatas.get(pos).getIsPlay()) {
+				holder.play_btn
+						.setBackgroundResource(R.drawable.play_control_selector);
+			} else {
+				holder.play_btn
+						.setBackgroundResource(R.drawable.pause_control_selector);
+			}
+
+			holder.filename.setText(listDatas.get(pos).getMp3().getName());
+			holder.starttime
+					.setText(listDatas.get(pos).getMp3().getDateAdded());
+			holder.duration.setText(formatTime(listDatas.get(pos).getMp3()
+					.getDuration()));
+
+			return convertView;
+		}
+
+	}
+
+	class Holder {
+		public RelativeLayout itemlayout;
+		public RelativeLayout relativelayout;
+		public TextView play_btn;
+		public TextView filename;
+		public TextView starttime;
+		public ImageView record_remarks;
+		public TextView duration;
+		public View view_top_line;
+
+		public Holder(View view) {
+			itemlayout = (RelativeLayout) view.findViewById(R.id.itemlayout);
+			relativelayout = (RelativeLayout) view
+					.findViewById(R.id.relativelayout);
+			play_btn = (TextView) view.findViewById(R.id.play_btn);
+			filename = (TextView) view.findViewById(R.id.filename);
+			starttime = (TextView) view.findViewById(R.id.starttime);
+			record_remarks = (ImageView) view.findViewById(R.id.record_remarks);
+			duration = (TextView) view.findViewById(R.id.duration);
+			view_top_line = (View) view.findViewById(R.id.view_top_line);
+		}
+	}
+
+	class ClickListener implements View.OnClickListener {
+
+		@Override
+		public void onClick(View v) {
+			// TODO Auto-generated method stub
+			if (v.getId() == R.id.send) {
+				if (myMediaPlayer.isPlay()) {
+					myMediaPlayer.pausePlay();
+
+					for (int i = 0; i < listDatas.size(); i++) {
+						ListItemBean listItemBean = listDatas.get(i);
+						listItemBean.setIsPlay(false);
+
+						listDatas.set(i, listItemBean);
+					}
+
+					listAdapter.notifyDataSetChanged();
+				}
+
+				showRepeatPlayDialog();
+			} else if (v.getId() == R.id.delete) {
+				if (myMediaPlayer.isPlay()) {
+					myMediaPlayer.pausePlay();
+
+					for (int i = 0; i < listDatas.size(); i++) {
+						ListItemBean listItemBean = listDatas.get(i);
+						listItemBean.setIsPlay(false);
+
+						listDatas.set(i, listItemBean);
+					}
+
+					listAdapter.notifyDataSetChanged();
+				}
+
+				AlertDialog.Builder dialog = new AlertDialog.Builder(mContext);
+				dialog.setTitle("删除")
+						.setMessage("该录音文件将会被删除。")
+						.setPositiveButton("确定",
+								new DialogInterface.OnClickListener() {
+									@Override
+									public void onClick(DialogInterface dialog,
+											int which) {
+										Uri uri = MediaStore.Audio.Playlists.Members
+												.getContentUri("external",
+														playlistId);
+										getContentResolver()
+												.delete(ContentUris
+														.withAppendedId(
+																uri,
+																listDatas
+																		.get(curPosition)
+																		.getMp3()
+																		.getSqlId()),
+														null, null);
+
+										listDatas.remove(curPosition);
+										listAdapter.notifyDataSetChanged();
+
+										if (seekbar_layout.getVisibility() == View.VISIBLE) {
+											seekbar_layout
+													.setVisibility(View.GONE);
+										}
+
+										if (listDatas.size() == 0) {
+											bbk_contant
+													.setVisibility(View.VISIBLE);
+										}
+									}
+
+								})
+						.setNegativeButton("取消",
+								new DialogInterface.OnClickListener() {
+									public void onClick(DialogInterface dialog,
+											int which) {
+										dialog.cancel();
+									}
+
+								}).create().show();
+			} else if (v.getId() == R.id.imageView_back) {
+				finish();
+			}
+		}
+
+	}
+
+	class SeekBarChangeEvent implements OnSeekBarChangeListener {
+		@Override
+		public void onProgressChanged(SeekBar seekBar, int progress,
+				boolean fromUser) {
+			if (fromUser) {
+				if (seekBar.getId() == R.id.seekbar) {
+					myMediaPlayer.movePlay(progress);
+					playetime.setText(formatTime(myMediaPlayer.getCurrent()));
+					totalduration.setText(formatTime(myMediaPlayer
+							.getDuration()));
+				}
+			}
+		}
+
+		@Override
+		public void onStartTrackingTouch(SeekBar seekBar) {
+
+		}
+
+		@Override
+		public void onStopTrackingTouch(SeekBar seekBar) {
+
+		}
+
+	}
+
+	class PlayListInfo {
+		private String playListId;
+		private String playListName;
+
+		public PlayListInfo(String playListId, String playListName) {
+			this.playListId = playListId;
+			this.playListName = playListName;
+		}
+
+		public void setPlayListId(String playListId) {
+			this.playListId = playListId;
+		}
+
+		public String getPlayListId() {
+			return playListId;
+		}
+
+		public void setPlayListName(String playListName) {
+			this.playListName = playListName;
+		}
+
+		public String getPlayListName() {
+			return playListName;
+		}
+	}
+
+}

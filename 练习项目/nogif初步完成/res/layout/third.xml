@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" 
+    android:id="@+id/third">
+
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="850dp"
+        android:background="@drawable/watermin" />
+    <ImageView
+        android:id="@+id/scene"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/scenetwo_a" />
+    
+    <ImageButton
+           android:id="@+id/quit"
+           android:layout_width="wrap_content"
+           android:layout_height="wrap_content"
+           android:layout_alignParentRight="true"
+           android:layout_alignTop="@+id/score"
+           android:background="@drawable/quit_b"
+            android:src="@anim/quit_a" />
+    <Button
+    android:id="@+id/score"
+    style="?android:attr/buttonStyleSmall"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginRight="16dp"
+        android:layout_marginTop="14dp"
+        android:background="@drawable/point" />
+<ImageView 
+    android:id="@+id/scorestar"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:background="@anim/scorestar" 
+    android:layout_marginLeft="10dp"
+    android:layout_marginTop="20dp"
+    />   
+
+</RelativeLayout>

@@ -1,0 +1,98 @@
+package com.gwj.clothes;
+
+import android.app.Activity;
+import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.view.Window;
+import android.view.WindowManager;
+import android.widget.*;
+import android.view.animation.*;
+import android.graphics.drawable.*;
+import android.os.*;
+import java.util.*;
+import android.view.View.*;
+
+public class MainActivity extends Activity implements OnClickListener{
+	int snailspeed = 10;
+	boolean snailflag = true;
+	ImageView snail = (ImageView)findViewById(R.id.snail);
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+      //去掉窗口标题
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
+        //全屏显示
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
+        		WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        setContentView(R.layout.activity_main);
+        AnimationDrawable snailmove = (AnimationDrawable)snail.getBackground();
+        snailmove.start();
+//        snail.setOnClickListener(new OnClickListener()
+//	    {
+//	
+//        	@Override
+//        	public void onClick(View arg0) {
+//        		if(snailflag)
+//        		{
+//        			snailflag = false;
+//        			snail.setBackgroundResource(R.anim.snailb);
+//        			AnimationDrawable snailup = (AnimationDrawable)snail.getBackground();
+//        			snailup.start();
+//        			final Handler handler = new Handler(){
+//        				@Override
+//        				public void handleMessage(android.os.Message msg) {
+//        					super.handleMessage(msg);
+//        					if (msg.what == 0x11) {
+//								snail.setBackgroundResource(R.anim.snail);
+//								AnimationDrawable snailmove = (AnimationDrawable)snail.getBackground();
+//								snailmove.start();
+//								snailflag = true;
+//								}
+//        					} 
+//        				};
+//        				new Timer().schedule(new TimerTask(){@Override
+//        				public void run() {
+//        					handler.sendEmptyMessage(0x11);
+//        				}}, 2400);
+//        		}
+//        		
+//        		}
+//        	});
+        }
+	@Override
+	public void onClick(View view) {
+		switch (view.getId()) {
+		case R.id.snail:
+			if(snailflag)
+    		{
+    			snailflag = false;
+    			snail.setBackgroundResource(R.anim.snailb);
+    			AnimationDrawable snailup = (AnimationDrawable)snail.getBackground();
+    			snailup.start();
+    			final Handler handler = new Handler(){
+    				@Override
+    				public void handleMessage(android.os.Message msg) {
+    					super.handleMessage(msg);
+    					if (msg.what == 0x11) {
+							snail.setBackgroundResource(R.anim.snail);
+							AnimationDrawable snailmove = (AnimationDrawable)snail.getBackground();
+							snailmove.start();
+							snailflag = true;
+							}
+    					} 
+    				};
+    				new Timer().schedule(new TimerTask(){@Override
+    				public void run() {
+    					handler.sendEmptyMessage(0x11);
+    				}}, 2400);
+    		}
+			break;
+
+		default:
+			break;
+		}
+	}
+}

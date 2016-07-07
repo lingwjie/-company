@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <array name="note">
+        <item>@drawable/note1</item>
+        <item>@drawable/note2</item>
+        <item>@drawable/note3</item>
+        <item>@drawable/note4</item>
+        <item>@drawable/note5</item>
+        <item>@drawable/note6</item>
+        <item>@drawable/note7</item>
+    </array>
+    
+    <array name="notes">
+        <item>@drawable/notes1</item>
+        <item>@drawable/notes2</item>
+        <item>@drawable/notes3</item>
+        <item>@drawable/notes4</item>
+        <item>@drawable/notes5</item>
+        <item>@drawable/notes6</item>
+        <item>@drawable/notes7</item>
+    </array>
+</resources>
